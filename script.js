@@ -1,84 +1,106 @@
 const RENDER_URL = 'https://anime-app-backend-cur1.onrender.com';
 const JIKAN_API = 'https://api.jikan.moe';
 
-const animeGrid = document.getElementById('animeGrid');
+const grid = document.getElementById('animeGrid');
 const searchInput = document.getElementById('searchInput');
 
-// 1. LOAD EVERYTHING ON STARTUP
-async function init() {
-    // First, get your private 100+ anime from Render
-    await loadPrivateVault();
-    // Then, fill the rest with Trending Anime from the API
-    await loadPublicAnime();
+// 1. THE MAIN STARTER
+async function startApp() {
+    console.log("App Starting...");
+    
+    // Load from your Render first
+    await fetchMyPrivateAnime();
+    
+    // Then load the massive public list
+    await fetchMassivePublicList();
 }
 
-// 2. FETCH FROM YOUR RENDER BACKEND
-async function loadPrivateVault() {
+// 2. GET YOUR 100+ ANIME FROM RENDER
+async function fetchMyPrivateAnime() {
     try {
-        const res = await fetch(RENDER_URL);
-        const myAnime = await res.json();
-        
-        const html = myAnime.map(anime => `
-            <div class="anime-card premium-glow" onclick="playTrailer('${anime.videoUrl}')">
-                <div class="badge">PRIVATE VAULT</div>
-                <img src="${anime.image}" loading="lazy">
-                <div class="card-info">
-                    <h3>${anime.title}</h3>
-                    <div class="meta"><span>⭐ ${anime.rating || '10/10'}</span><span>EXCLUSIVE</span></div>
-                </div>
-            </div>
-        `).join('');
-        
-        animeGrid.insertAdjacentHTML('beforeend', html);
+        const response = await fetch(RENDER_URL);
+        const data = await response.json();
+        if(data.length > 0) {
+            renderCards(data, true); // true = adds the pink "Premium" glow
+        }
     } catch (err) {
-        console.error("Render Backend not responding yet...");
+        console.log("Render Backend is waking up... moving to public data for now.");
     }
 }
 
-// 3. FETCH FROM PUBLIC API (FOR MASSIVE QUANTITY)
-async function loadPublicAnime() {
-    const res = await fetch(`${JIKAN_API}/top/anime?limit=15`);
-    const json = await res.json();
-    renderPublic(json.data);
+// 3. GET MASSIVE LIST FROM PUBLIC API
+async function fetchMassivePublicList() {
+    try {
+        const response = await fetch(`${JIKAN_API}/top/anime?limit=24`);
+        const json = await response.json();
+        renderCards(json.data, false);
+    } catch (err) {
+        grid.innerHTML = "<h2>Failed to load anime. Check connection!</h2>";
+    }
 }
 
-function renderPublic(list) {
-    const html = list.map(anime => `
-        <div class="anime-card" onclick="playTrailer('${anime.trailer.embed_url}')">
-            <img src="${anime.images.webp.large_image_url}" loading="lazy">
-            <div class="card-info">
-                <h3>${anime.title}</h3>
-                <div class="meta"><span>⭐ ${anime.score || 'N/A'}</span><span>${anime.type}</span></div>
+// 4. THE CARD GENERATOR (The part that actually puts stuff on screen)
+function renderCards(data, isPremium) {
+    const html = data.map(anime => {
+        // Handle different data formats between Render and Jikan
+        const title = anime.title || "Untitled Anime";
+        const img = anime.image || anime.images?.webp?.large_image_url;
+        const video = anime.videoUrl || anime.trailer?.embed_url;
+        const score = anime.rating || anime.score || "8.5";
+        
+        return `
+            <div class="anime-card ${isPremium ? 'premium-glow' : ''}" onclick="playVideo('${video}')">
+                ${isPremium ? '<div class="badge">PRIVATE VAULT</div>' : ''}
+                <img src="${img}" alt="${title}" onerror="this.src='https://via.placeholder.com'">
+                <div class="card-info">
+                    <h3>${title}</h3>
+                    <div class="meta">
+                        <span>⭐ ${score}</span>
+                        <span>${isPremium ? 'EXCLUSIVE' : 'HD'}</span>
+                    </div>
+                </div>
             </div>
-        </div>
-    `).join('');
-    animeGrid.insertAdjacentHTML('beforeend', html);
+        `;
+    }).join('');
+
+    // If it's the first load, add it. If it's a search, replace it.
+    grid.innerHTML += html;
 }
 
-// 4. SEARCH LOGIC (Searches everything)
-searchInput.addEventListener('input', async (e) => {
-    const term = e.target.value;
-    if (term.length < 3) return;
+// 5. SEARCH FEATURE (That actually works)
+searchInput.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+        const query = searchInput.value;
+        if (query.length < 3) return;
 
-    const res = await fetch(`${JIKAN_API}/anime?q=${term}&limit=24`);
-    const json = await res.json();
-    
-    animeGrid.innerHTML = ''; // Clear for search results
-    renderPublic(json.data);
+        grid.innerHTML = '<h2 style="grid-column: 1/-1; text-align: center;">Searching the Vault...</h2>';
+        
+        const res = await fetch(`${JIKAN_API}/anime?q=${query}&limit=24`);
+        const json = await res.json();
+        
+        grid.innerHTML = ''; // Clear for search results
+        renderCards(json.data, false);
+    }
 });
 
-// 5. VIDEO PLAYER
-function playTrailer(url) {
-    if(!url || url === 'null') return alert("No video link found!");
+// 6. VIDEO PLAYER
+function playVideo(url) {
+    if(!url || url === "undefined" || url === "null") {
+        alert("No video source found for this title.");
+        return;
+    }
     const modal = document.getElementById('videoModal');
-    document.getElementById('videoIframe').src = url;
+    const iframe = document.getElementById('videoIframe');
+    iframe.src = url;
     modal.style.display = 'flex';
 }
 
+// Close Button
 document.querySelector('.close-btn').onclick = () => {
     document.getElementById('videoModal').style.display = 'none';
     document.getElementById('videoIframe').src = '';
 };
 
-init();
-    
+// RUN IT!
+startApp();
+       
