@@ -1,0 +1,139 @@
+/* 1. THE TECHY CORE */
+:root {
+    --neon: #00f2ff;
+    --bg: #050505;
+    --glass: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.1);
+}
+
+* { box-sizing: border-box; transition: 0.3s ease-in-out; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+}
+
+/* 2. DYNAMIC BACKGROUND GLOW */
+.bg-glow {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050505 100%);
+    z-index: -1;
+}
+
+/* 3. GLASS NAVIGATION & SEARCH */
+.glass-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0; z-index: 100;
+}
+
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+}
+.logo span { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
+
+.search-box { position: relative; }
+#searchInput {
+    padding: 12px 25px;
+    width: 350px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    color: white;
+    outline: none;
+}
+#searchInput:focus {
+    border-color: var(--neon);
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+}
+
+/* 4. THE MASSIVE GRID */
+.anime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 30px;
+    padding: 40px 5%;
+}
+
+/* 5. ANIME CARDS (The "Smooth" Part) */
+.anime-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.anime-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    border-color: var(--neon);
+    box-shadow: 0 10px 30px rgba(0, 242, 255, 0.2);
+}
+
+.anime-card img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+}
+
+.card-info {
+    padding: 15px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+}
+
+.card-info h3 {
+    font-size: 0.9rem;
+    margin: 5px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--neon);
+}
+
+/* 6. CINEMATIC VIDEO MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.modal-content {
+    width: 85%;
+    max-width: 1000px;
+    aspect-ratio: 16/9;
+    border: 1px solid var(--neon);
+    position: relative;
+}
+
+#videoIframe { width: 100%; height: 100%; }
+
+.close-btn {
+    position: absolute;
+    top: -40px; right: 0;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+}
